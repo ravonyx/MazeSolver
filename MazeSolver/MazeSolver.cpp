@@ -15,11 +15,10 @@ int main()
 	imgMaze = cv::imread("img/maze1.png");
 	cv::Mat copyImgMaze(imgMaze.size(), CV_8UC3, cv::Scalar(255, 255, 255));
 	imgMaze.copyTo(copyImgMaze);
-	cv::imshow(" image", copyImgMaze);
+	cv::imshow("Original image", copyImgMaze);
 
 	cv::Mat img;
 	cv::cvtColor(imgMaze, img, CV_BGR2GRAY);
-	cv::imshow("Gray image", img);
 
 	//Seuillage sur image grayscale
 	double thresh = 127;
@@ -36,16 +35,16 @@ int main()
 
 	cv::Mat draw = cv::Mat::zeros(imgMaze.size(), CV_32FC1);
 	cv::drawContours(draw, contours, 0, cv::Scalar(255), -1);
-	//cv::imshow("contours", draw);
+	cv::imshow("Draw contours", draw);
 
 	cv::Mat dilated;
 	kernel = cv::Mat::ones(21, 21, CV_8UC1);
 	cv::dilate(draw, dilated, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
-	//cv::imshow("Gray image dilate", dilated);
+	cv::imshow("Draw contours dilate", dilated);
 
 	cv::Mat eroded;
 	cv::erode(dilated, eroded, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
-	//cv::imshow("Gray image eroded", eroded);
+	cv::imshow("Draw contours eroded", eroded);
 
 	cv::Mat diff(imgMaze.size(), CV_8UC1, cv::Scalar(255, 255, 255));
 	cv::absdiff(dilated, eroded, diff);
@@ -55,7 +54,7 @@ int main()
 	//set pixels masked by blackWhite to blue
 	bgr.setTo(cv::Scalar(255, 0, 0), diff);
 	bgr.convertTo(bgr, CV_8UC1);
-	cv::imshow("path", bgr);
+	cv::imshow("Path", bgr);
 
 	//cv::Mat result(imgMaze.size(), CV_8UC3, cv::Scalar(255, 255, 255));
 	//cv::add(copyImgMaze, diff, result);
