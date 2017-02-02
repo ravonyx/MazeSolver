@@ -101,33 +101,35 @@ int main()
 
 	if (contours.size() != 2)
 		std::cout << "There are more than 2 walls";
+	else
+	{
+		cv::Mat draw = cv::Mat::zeros(imgMaze.size(), CV_32FC1);
+		cv::drawContours(draw, contours, 0, cv::Scalar(255), -1);
+		cv::imshow("Draw contours", draw);
 
-	cv::Mat draw = cv::Mat::zeros(imgMaze.size(), CV_32FC1);
-	cv::drawContours(draw, contours, 0, cv::Scalar(255), -1);
-	cv::imshow("Draw contours", draw);
+		cv::Mat dilated;
+		kernel = cv::Mat::ones(10, 10, CV_8UC1);
+		cv::dilate(draw, dilated, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
+		cv::imshow("Draw contours dilate", dilated);
 
-	cv::Mat dilated;
-	kernel = cv::Mat::ones(21, 21, CV_8UC1);
-	cv::dilate(draw, dilated, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
-	cv::imshow("Draw contours dilate", dilated);
+		cv::Mat eroded;
+		cv::erode(dilated, eroded, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
+		cv::imshow("Draw contours eroded", eroded);
 
-	cv::Mat eroded;
-	cv::erode(dilated, eroded, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
-	cv::imshow("Draw contours eroded", eroded);
+		cv::Mat diff(imgMaze.size(), CV_8UC1, cv::Scalar(255, 255, 255));
+		cv::absdiff(dilated, eroded, diff);
+		diff.convertTo(diff, CV_8UC1);
 
-	cv::Mat diff(imgMaze.size(), CV_8UC1, cv::Scalar(255, 255, 255));
-	cv::absdiff(dilated, eroded, diff);
-	diff.convertTo(diff, CV_8UC1);
+		//set pixels masked by blackWhite to blue
+		cv::Mat path(imgMaze.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+		path.setTo(cv::Scalar(255, 0, 0), diff);
+		path.convertTo(path, CV_8UC1);
+		cv::imshow("Path", path);
 
-	//set pixels masked by blackWhite to blue
-	cv::Mat path(imgMaze.size(), CV_8UC3, cv::Scalar(255,255,255));
-	path.setTo(cv::Scalar(255, 0, 0), diff);
-	path.convertTo(path, CV_8UC1);
-	cv::imshow("Path", path);
-
-	cv::Mat finalImg;
-	copyImgMaze.copyTo(finalImg, path);
-	imshow("Maze Resolved", finalImg);
+		cv::Mat finalImg;
+		copyImgMaze.copyTo(finalImg, path);
+		imshow("Maze Resolved", finalImg);
+	}
 
 	cv::waitKey();
 	return 1;
