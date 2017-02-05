@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -10,6 +9,8 @@
 #include <tchar.h> 
 #include <stdio.h>
 #include <strsafe.h>
+
+int video();
 
 void listFolders(std::vector<std::string> &imgNames)
 {
@@ -61,22 +62,69 @@ std::string loadMazeImage(std::vector<std::string> &imgNames)
 	int choose;
 	std::cin >> choose;
 
-	if (choose > imgNames.size() || choose < 0)
+	std::string pathImg = "Img/";
+	if (choose < 0)
 	{
 		std::cout << "Wrong number given !" << std::endl;
 		exit(0);
 	}
-
-	std::string name = imgNames[choose];
-	std::string pathImg = "Img/";
-	pathImg += name;
-	std::cout << pathImg << std::endl;
-
+	else if(choose > imgNames.size())
+	{
+		video();
+	}
+	else
+	{
+		std::string name = imgNames[choose];
+		pathImg = "Img/";
+		pathImg += name;
+		std::cout << pathImg << std::endl;
+	}
 	return pathImg;
+}
+
+int video() {
+	cv::VideoCapture cap;
+	cv::Mat nextInput;
+
+	//si videoname n’est pas null, ouvrir la video dans cap, sinon ouvrir la camera 0
+	cap = cv::VideoCapture(0); //Camera frontale par défault de ma machine
+
+	if (!cap.isOpened())
+		cap = cv::VideoCapture(0);
+
+	if (!cap.isOpened())  // check if we succeeded
+		return -1;
+
+	//recuperer une image depuis cap et la stocker dans nextInput
+	cap >> nextInput;
+	//tant que nextinput n’est pas vide
+	while (!nextInput.empty())
+	{
+		// - > faire les traitements sur l’image (prochaines étapes)
+
+
+		// - > appeler la fonction de dessin
+		//draw();
+		cv::Mat img = nextInput.clone();
+		cv::Mat gray;
+		cv::cvtColor(img, gray, CV_BGR2GRAY);
+		cv::cvtColor(img, nextInput, CV_BGR2GRAY);
+
+		// - > recuperer une nouvelle image et la stocker dans nextInput
+		cap >> nextInput;
+		// - > attendre 10ms que l’utilisateur tape une touche, et quitter si il le fait
+		cv::imshow("input", gray);
+		if (cv::waitKey(10) >= 0) break;
+	}
+
+	return 0;
+	
 }
 
 int main()
 {
+
+	//video();
 	std::vector<std::string> imgNames;
 	listFolders(imgNames);
 	std::string pathImg = loadMazeImage(imgNames);
@@ -130,6 +178,8 @@ int main()
 		copyImgMaze.copyTo(finalImg, path);
 		imshow("Maze Resolved", finalImg);
 	}
+
+	
 
 	cv::waitKey();
 	return 1;
