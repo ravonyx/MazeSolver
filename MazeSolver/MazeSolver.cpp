@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <strsafe.h>
 
+#define OUTPUT_PROCESS 0
+
 void listFolders(std::vector<std::string> &imgNames)
 {
 	WIN32_FIND_DATA file;
@@ -97,6 +99,8 @@ int main()
 	cv::threshold(img, img, 50, maxValue, cv::THRESH_BINARY_INV);
 	cv::Mat kernel = cv::Mat::ones(2, 2, CV_8UC1);
 	std::vector<std::vector<cv::Point> > contours;
+
+	//find the external contours of the labyrith
 	cv::findContours(img, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
 	if (contours.size() != 2)
@@ -104,28 +108,36 @@ int main()
 	else
 	{
 		cv::Mat draw = cv::Mat::zeros(imgMaze.size(), CV_32FC1);
-		cv::drawContours(draw, contours, 0, cv::Scalar(255), -1);
+		//draw contours in white
+		cv::drawContours(draw, contours, 0, cv::Scalar(255));
+#if OUTPUT_PROCESS == 1
 		cv::imshow("Draw contours", draw);
-
+#endif
 		cv::Mat dilated;
 		kernel = cv::Mat::ones(10, 10, CV_8UC1);
 		cv::dilate(draw, dilated, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
+#if OUTPUT_PROCESS == 1
 		cv::imshow("Draw contours dilate", dilated);
-
+#endif
 		cv::Mat eroded;
-		cv::erode(dilated, eroded, kernel, cv::Point(-1, -1), 2, IPL_BORDER_CONSTANT);
+		cv::erode(dilated, eroded, kernel, cv::Point(-1, -1), 1, IPL_BORDER_CONSTANT);
+#if OUTPUT_PROCESS == 1
 		cv::imshow("Draw contours eroded", eroded);
-
+#endif
 		cv::Mat diff(imgMaze.size(), CV_8UC1, cv::Scalar(255, 255, 255));
 		cv::absdiff(dilated, eroded, diff);
 		diff.convertTo(diff, CV_8UC1);
-
+#if OUTPUT_PROCESS == 1
+		cv::imshow("Dif between eroded dilate and eroded", diff);
+#endif
 		//set pixels masked by blackWhite to blue
 		cv::Mat path(imgMaze.size(), CV_8UC3, cv::Scalar(255, 255, 255));
 		path.setTo(cv::Scalar(255, 0, 0), diff);
 		path.convertTo(path, CV_8UC1);
+#if OUTPUT_PROCESS == 1
 		cv::imshow("Path", path);
-
+#endif	
+		//
 		cv::Mat finalImg;
 		copyImgMaze.copyTo(finalImg, path);
 		imshow("Maze Resolved", finalImg);
